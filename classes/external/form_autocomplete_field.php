@@ -17,7 +17,7 @@
 namespace local_openlms\external;
 
 use external_function_parameters;
-use external_description;
+use core_external\external_description;
 use external_single_structure;
 use external_multiple_structure;
 use external_value;
@@ -35,7 +35,7 @@ if (!class_exists('external_api')) {
  * @author      Petr Skoda
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-abstract class form_autocomplete_field extends \external_api {
+abstract class form_autocomplete_field extends \core_external\external_api {
     /**
      * Describes the external function arguments.
      *
