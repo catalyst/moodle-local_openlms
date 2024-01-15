@@ -52,7 +52,7 @@ $task = \core\task\manager::get_scheduled_task($taskname);
 
 // Do setup for cron task.
 raise_memory_limit(MEMORY_EXTRA);
-cron_setup_user();
+\core\cron::setup_user();
 
 // Get lock.
 $cronlockfactory = \core\lock\lock_config::get_lock_factory('cron');
