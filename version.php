@@ -27,7 +27,7 @@ defined('MOODLE_INTERNAL') || die();
 
 /** @var stdClass $plugin */
 
-$plugin->version   = 2024010200;
+$plugin->version   = 2024031200;
 $plugin->requires  = 2023100902.00; // 4.3.2
 $plugin->component = 'local_openlms';
 $plugin->maturity  = MATURITY_STABLE;
