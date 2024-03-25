@@ -30,9 +30,18 @@ if (get_config('enrol_programs', 'version')) {
     $syscontext = context_system::instance();
     if (!has_capability('moodle/site:config', $syscontext)) {
         if (!$ADMIN->locate('programs')) {
-            if (has_capability('moodle/site:configview', $syscontext)) {
+            if (has_capability('moodle/site:configview', $syscontext) && get_config('enrol_programs', 'version')) {
                 if (file_exists(__DIR__ . '/../../enrol/programs/settings.php')) {
                     require __DIR__ . '/../../enrol/programs/settings.php';
+                }
+            }
+        }
+
+        if (!$ADMIN->locate('customfieldsettings')) {
+            if (has_capability('moodle/site:configview', $syscontext) && get_config('customfield_training', 'version')) {
+                if (file_exists(__DIR__ . '/../../enrol/programs/settings.php')) {
+                    $ADMIN->add('modules', new admin_category('customfieldsettings', new lang_string('customfields', 'core_customfield')));
+                    require __DIR__ . '/../../customfield/field/training/settings.php';
                 }
             }
         }
