@@ -31,5 +31,5 @@ $plugin->version   = 2024031200;
 $plugin->requires  = 2023100902.00; // 4.3.2
 $plugin->component = 'local_openlms';
 $plugin->maturity  = MATURITY_STABLE;
-$plugin->release   = 'v3.0alpha';
+$plugin->release   = 'v3.0.0dev';
 $plugin->supported = [403, 403];
