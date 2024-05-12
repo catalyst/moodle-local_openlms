@@ -16,16 +16,11 @@
 
 namespace local_openlms\external;
 
-use external_function_parameters;
+use core_external\external_function_parameters;
 use core_external\external_description;
-use external_single_structure;
-use external_multiple_structure;
-use external_value;
-
-if (!class_exists('external_api')) {
-    global $CFG;
-    require_once("$CFG->libdir/externallib.php");
-}
+use core_external\external_single_structure;
+use core_external\external_multiple_structure;
+use core_external\external_value;
 
 /**
  * Base class for simplified form ajax autocomplete fields.
