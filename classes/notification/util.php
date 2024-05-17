@@ -43,6 +43,39 @@ final class util {
     }
 
     /**
+     * Imports notifications- all existing notifications are deleted before importing.
+     *
+     * @param array $data
+     * @param array $notificationids that need to be imported.
+     * @return bool
+     */
+    public static function import_notifications(\stdClass $data, array $notificationids): bool {
+        global $DB;
+        $notifications = $DB->get_records('local_openlms_notifications',
+            ['instanceid' => $data->instanceid, 'component' => $data->component]);
+
+        foreach ($notificationids as $notificationid) {
+            $notification = $DB->get_record('local_openlms_notifications', ['id' => $notificationid]);
+            if ($notification->customjson) {
+                $notification->custom = 1;
+                list($notification->subject, $notification->body) = array_values((array) json_decode($notification->customjson));
+            }
+            $notification->instanceid = $data->instanceid;
+            // Check if there already is a notification for this type and instanceid.
+            $existingnotificationid = $DB->get_field('local_openlms_notifications', 'id',
+                ['instanceid' => $notification->instanceid = $data->instanceid, 'notificationtype' => $notification->notificationtype]);
+            if (!$existingnotificationid) {
+                self::notification_create((array)$notification);
+            } else {
+                $notification->id = $existingnotificationid;
+                self::notification_update((array)$notification);
+            }
+        }
+
+        return true;
+    }
+
+    /**
      * Create a new instance notification.
      *
      * @param array $data
@@ -79,7 +112,7 @@ final class util {
 
         if (!empty($data->custom)) {
             $data->custom = '1';
-            $data->customjson = json_encode([
+            $data->customjson = $data->customjson ?? json_encode([
                 'subject' => $data->subject ?? '',
                 'body' => $data->body['text'] ?? $data->body ?? '',
             ]);

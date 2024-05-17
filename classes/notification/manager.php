@@ -114,6 +114,36 @@ abstract class manager {
     abstract public static function setup_view_page(\stdClass $notification): void;
 
     /**
+     * Whether import of notification is supported
+     *
+     * @return bool
+     */
+    public static function is_instance_notification_import_supported(): bool {
+        return false;
+    }
+
+    /**
+     * Adds the from instance element dropdown
+     *
+     * @param int $instanceid
+     * @param \MoodleQuickForm $mform
+     * @return void
+     */
+     public static function add_frominstance_element(int $instanceid, \MoodleQuickForm $mform): void {
+         return;
+     }
+
+    /**
+     * Validates if the user can import from the specified instanceid.
+     *
+     * @param int $frominstanceid
+     * @return void
+     */
+     public static function validate_frominstance(int $frominstanceid): bool {
+         return false;
+     }
+
+    /**
      * Render list of all instance notifications and management UI.
      *
      * @param int $instanceid
@@ -189,8 +219,16 @@ abstract class manager {
         if (static::get_candidate_types($instanceid)) {
             $url = new \moodle_url('/local/openlms/notification/create.php', ['instanceid' => $instanceid, 'component' => $component]);
             $icon = new \local_openlms\output\dialog_form\icon($url, 'e/insert', get_string('notification_create', 'local_openlms'));
-            $icon = $dialogformoutput->render($icon);
-            $cell = new \html_table_cell($icon);
+            $icons = $dialogformoutput->render($icon);
+
+            if (static::is_instance_notification_import_supported()) {
+                $url = new \moodle_url('/local/openlms/notification/import.php', ['instanceid' => $instanceid, 'component' => $component]);
+                $icon = new \local_openlms\output\dialog_form\icon($url, 'import', get_string('notification_import', 'local_openlms'), 'local_openlms');
+                $importicon = $dialogformoutput->render($icon);
+                $icons .= ' '.$importicon;
+            }
+
+            $cell = new \html_table_cell($icons);
             if ($canmanage) {
                 $cell->colspan = 4;
             } else {
