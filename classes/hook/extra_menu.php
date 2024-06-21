@@ -25,7 +25,7 @@ namespace local_openlms\hook;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 abstract class extra_menu implements \core\hook\described_hook {
-    /** @var array $items */
+    /** @var array $items links, dividers or custom html fragments */
     protected $items = [];
     /** @var string $page */
     protected $page;
@@ -47,14 +47,34 @@ abstract class extra_menu implements \core\hook\described_hook {
     }
 
     /**
-     * Add item to extra menu.
+     * Add standard link item to extra menu.
      *
      * @param string $label
      * @param \moodle_url $url
-     * @return void
      */
     public function add_item(string $label, \moodle_url $url): void {
         $this->items[] = ['label' => $label, 'url' => $url];
+    }
+
+    /**
+     * Add divider element.
+     */
+    public function add_divider(): void {
+        $this->items[] = ['divider' => true];
+    }
+
+    /**
+     * Add link that opens dialog_form.
+     *
+     * @param \local_openlms\output\dialog_form\link $link
+     */
+    public function add_dialog_form(\local_openlms\output\dialog_form\link $link): void {
+        global $PAGE;
+        $output = $PAGE->get_renderer('local_openlms', 'dialog_form');
+        $oldclass = $link->get_class();
+        $link->set_class('dropdown-item');
+        $this->items[] = ['customhtml' => $output->render($link)];
+        $link->set_class($oldclass);
     }
 
     /**

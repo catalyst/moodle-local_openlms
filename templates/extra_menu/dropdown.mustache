@@ -26,6 +26,7 @@
             { "url": "https://moodle.test/something.php", "label": "Something" },
             { "divider": true },
             { "url": "https://moodle.test/else.php", "label": "Else" },
+            { "customhtml": "<a class="dropdown-item" href="https://moodle.test/other.php">Other link</a>" }
         ],
     }
 }}
@@ -42,6 +43,9 @@
             {{#url}}
                 <a class="dropdown-item" href="{{url}}">{{label}}</a>
             {{/url}}
+            {{#customhtml}}
+                {{{.}}}
+            {{/customhtml}}
         {{/items}}
     </div>
 </div>
