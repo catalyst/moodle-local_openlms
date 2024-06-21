@@ -77,4 +77,29 @@ class renderer extends \plugin_renderer_base {
             return $this->output->render_from_template('local_openlms/dialog_form/button', $data);
         }
     }
+
+    protected function render_link(link $link) {
+        if ($link->legacyformtest) {
+            $title = $link->get_title();
+            if ($link->is_disabled()) {
+                return $title;
+            }
+            return \html_writer::link($link->get_form_url(), $title);
+        }
+
+        $data = [
+            'title' => $link->get_title(),
+            'formurl' => $link->get_form_url()->out(false),
+            'dialogname' => $link->get_dialog_name(),
+            'aftersubmit' => $link->get_after_submit(),
+            'class' => $link->get_class(),
+            'uniqid' => uniqid(),
+        ];
+
+        if ($link->is_disabled()) {
+            return $this->output->render_from_template('local_openlms/dialog_form/link_disabled', $data);
+        } else {
+            return $this->output->render_from_template('local_openlms/dialog_form/link', $data);
+        }
+    }
 }

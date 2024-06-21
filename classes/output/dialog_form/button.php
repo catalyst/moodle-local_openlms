@@ -28,9 +28,6 @@ final class button extends action {
     /** @var bool is this a primary button? */
     protected $primary;
 
-    /** @var string extra CSS classes */
-    protected $class = '';
-
     /** @var \pix_icon */
     protected $pixicon;
 
@@ -45,14 +42,6 @@ final class button extends action {
 
     public function set_primary(bool $value): void {
         $this->primary = $value;
-    }
-
-    public function set_class(string $class): void {
-        $this->class = $class;
-    }
-
-    public function get_class(): string {
-        return $this->class;
     }
 
     public function set_icon(string $pix, string $component): void {

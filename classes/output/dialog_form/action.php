@@ -44,6 +44,8 @@ abstract class action implements \renderable {
     public $legacyformtest = false;
     /** @var bool is this action disabled? */
     protected $disabled = false;
+    /** @var string extra CSS classes */
+    protected $class = '';
 
     public function __construct(\moodle_url $formurl, $title) {
         $this->formurl = $formurl;
@@ -81,5 +83,23 @@ abstract class action implements \renderable {
 
     public function set_disabled(bool $value): void {
         $this->disabled = $value;
+    }
+
+    /**
+     * Add additional classes to html element.
+     *
+     * @param string $class html class attribute
+     */
+    public function set_class(string $class): void {
+        $this->class = $class;
+    }
+
+    /**
+     * Returns additional element classes.
+     *
+     * @return string
+     */
+    public function get_class(): string {
+        return $this->class;
     }
 }
