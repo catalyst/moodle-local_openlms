@@ -16,8 +16,17 @@
 
 namespace local_openlms\hook;
 
+use local_openlms\output\extra_menu\dropdown;
+
 /**
- * Base class for extra menu additions hook
+ * Base class for extra menu hooks.
+ *
+ * Extra menus are commonly used in management UIs in Open LMS.
+ * In tabbed interfaces there might be tab specific or managed element
+ * specific extra menus.
+ *
+ * Plugins may define one or more extra menu hooks that contain
+ * additional page context information.
  *
  * @package    local_openlms
  * @copyright  2024 Open LMS (https://www.openlms.net/)
@@ -25,25 +34,29 @@ namespace local_openlms\hook;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 abstract class extra_menu implements \core\hook\described_hook {
-    /** @var array $items links, dividers or custom html fragments */
-    protected $items = [];
-    /** @var string $page */
-    protected $page;
+    /** @var dropdown */
+    protected $dropdown;
 
     /**
-     * @param string $page page name, usually matches relative file name without .php suffix.
+     * Constructor.
+     *
+     * @param dropdown $dropdown
      */
-    public function __construct(string $page) {
-        $this->page = $page;
+    public function __construct($dropdown) {
+        if (!$dropdown instanceof dropdown) {
+            debugging('Constructor of extra_menu now expects dropdown instead of page.', DEBUG_DEVELOPER);
+            $dropdown = new dropdown(get_string('extramenu', 'local_openlms'));
+        }
+        $this->dropdown = $dropdown;
     }
 
     /**
-     * Returns page identification.
+     * Returns dropdown instance.
      *
-     * @return string
+     * @return dropdown
      */
-    public function get_page(): string {
-        return $this->page;
+    public function get_dropdown(): dropdown {
+        return $this->dropdown;
     }
 
     /**
@@ -53,14 +66,14 @@ abstract class extra_menu implements \core\hook\described_hook {
      * @param \moodle_url $url
      */
     public function add_item(string $label, \moodle_url $url): void {
-        $this->items[] = ['label' => $label, 'url' => $url];
+        $this->dropdown->add_item($label,$url);
     }
 
     /**
      * Add divider element.
      */
     public function add_divider(): void {
-        $this->items[] = ['divider' => true];
+        $this->dropdown->add_divider();
     }
 
     /**
@@ -69,30 +82,30 @@ abstract class extra_menu implements \core\hook\described_hook {
      * @param \local_openlms\output\dialog_form\link $link
      */
     public function add_dialog_form(\local_openlms\output\dialog_form\link $link): void {
-        global $PAGE;
-        $output = $PAGE->get_renderer('local_openlms', 'dialog_form');
-        $oldclass = $link->get_class();
-        $link->set_class('dropdown-item');
-        $this->items[] = ['customhtml' => $output->render($link)];
-        $link->set_class($oldclass);
+        $this->dropdown->add_dialog_form($link);
     }
 
     /**
-     * Are there any items?
+     * Are there any items in the dropdown?
      *
      * @return bool
      */
     public function has_items(): bool {
-        return !empty($this->items);
+        return $this->dropdown->has_items();
     }
 
     /**
      * Returns collected extra items.
      *
+     * @deprecated to be removed in Open LMS Work 4.0
+     *
      * @return array
      */
     public function get_items(): array {
-        return $this->items;
+        global $OUTPUT;
+
+        debugging('extra_menu::get_items() is deprecated, render extra_menu::get_dropdown() instead', DEBUG_DEVELOPER);
+        return $this->dropdown->export_for_template($OUTPUT)['items'];
     }
 
     /**
@@ -102,7 +115,8 @@ abstract class extra_menu implements \core\hook\described_hook {
      * @return string
      */
     public static function get_hook_description(): string {
-        return 'Extra menu additions hook.';
+        debugging('Each extra_menu hook must define get_hook_description', DEBUG_DEVELOPER);
+        return 'Extra menu hook missing description';
     }
 
     /**

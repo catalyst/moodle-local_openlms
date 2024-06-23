@@ -26,6 +26,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $string['cachedef_hookcallbacks'] = 'Hook callbacks';
+$string['extramenu'] = 'Extra actions';
 $string['hookcallback'] = 'Callback';
 $string['hookcallbacks'] = 'Callbacks';
 $string['hookdeprecates'] = 'Deprecated lib.php callbacks';
