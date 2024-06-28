@@ -43,30 +43,6 @@ final class util {
     }
 
     /**
-     * Imports notifications- all existing notifications are deleted before importing.
-     *
-     * @param array $data
-     * @param array $notificationids that need to be imported.
-     * @return bool
-     */
-    public static function import_notifications(\stdClass $data, array $notificationids): bool {
-        global $DB;
-        $notifications = $DB->get_records('local_openlms_notifications',
-            ['instanceid' => $data->instanceid, 'component' => $data->component]);
-        foreach ($notifications as $notification) {
-            self::notification_delete($notification->id);
-        }
-
-        foreach ($notificationids as $notificationid) {
-            $notification = $DB->get_record('local_openlms_notifications', ['id' => $notificationid]);
-            $notification->instanceid = $data->instanceid;
-            self::notification_create((array)$notification);
-        }
-
-        return true;
-    }
-
-    /**
      * Create a new instance notification.
      *
      * @param array $data
