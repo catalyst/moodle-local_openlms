@@ -284,48 +284,14 @@ class util_test extends \advanced_testcase {
     }
 
     public function test_notification_import() {
-        global $DB;
-        if (!get_config('enrol_programs', 'version')) {
-            $this->markTestSkipped('Test requires enrol_programs plugin');
+        // Invalid data tests only here, real data tests in:
+        // \enrol_programs\local\notification_manager_test::test_notification_util_notification_import().
+
+        try {
+            util::notification_import((object)['component' => 'fdjhkjsdhkfds', 'instanceid' => 2, 'frominstance' => 3], []);
+            $this->fail('Exception expected');
+        } catch (\moodle_exception $ex) {
+            $this->assertInstanceOf(\invalid_parameter_exception::class, $ex);
         }
-        $generator = $this->getDataGenerator()->get_plugin_generator('enrol_programs');
-        $syscontext = \context_system::instance();
-        $cohort1 = $this->getDataGenerator()->create_cohort();
-
-        $program1 = $generator->create_program([
-            'fullname' => 'hokus',
-            'idnumber' => 'p1',
-            'description' => 'some desc 1',
-            'descriptionformat' => FORMAT_MARKDOWN,
-            'public' => 1,
-            'archived' => 0,
-            'contextid' => $syscontext->id,
-            'sources' => ['manual' => []],
-            'cohorts' => [$cohort1->id],
-        ]);
-        $notification1 = $generator->create_program_notification(['notificationtype' => 'allocation', 'programid' => $program1->id,
-            'custom' => 1, 'subject' => 'You are allocated', 'body' => 'Welcome to the program']);
-        $notification2 = $generator->create_program_notification(['notificationtype' => 'endsoon', 'programid' => $program1->id]);
-        $program2 = $generator->create_program([
-            'fullname' => 'pokus',
-            'idnumber' => 'p2',
-            'description' => 'some desc 2',
-            'descriptionformat' => FORMAT_MARKDOWN,
-            'public' => 1,
-            'archived' => 0,
-            'contextid' => $syscontext->id,
-            'sources' => ['manual' => []],
-            'cohorts' => [$cohort1->id],
-        ]);
-        $generator->create_program_notification(['notificationtype' => 'allocation', 'programid' => $program2->id]);
-        $notificationsbeforeimport = $DB->get_records('local_openlms_notifications');
-        $this->assertCount(3, $notificationsbeforeimport);
-        util::import_notifications((object)['component' => 'enrol_programs', 'instanceid' => $program2->id], [$notification1->id, $notification2->id]);
-        $notificationsafterimport = $DB->get_records('local_openlms_notifications');
-        $this->assertCount(4, $notificationsafterimport);
-        $allocationnotificationprogram2 = $DB->get_record('local_openlms_notifications',
-            ['component' => 'enrol_programs', 'notificationtype' => 'allocation', 'instanceid' => $program2->id]);
-        $this->assertSame('{"subject":"You are allocated","body":"Welcome to the program"}', $allocationnotificationprogram2->customjson);
-
     }
 }

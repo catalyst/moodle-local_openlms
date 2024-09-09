@@ -55,26 +55,23 @@ final class notification_import_confirmation extends \local_openlms\dialog_form 
         $types = $manager::get_all_types();
 
         $notifications = $DB->get_records('local_openlms_notifications',
-            ['instanceid' => $frominstance, 'component' => $component]);
+            ['instanceid' => $frominstance, 'component' => $component, 'enabled' => 1]);
         foreach ($notifications as $notification) {
-            $classname = $types[$notification->notificationtype] ?? null;
-            $mform->addElement('advcheckbox', 'importnotification_'.$notification->id, $classname::get_name(), null,
+            if (!isset($types[$notification->notificationtype])) {
+                continue;
+            }
+            $classname = $types[$notification->notificationtype];
+            $mform->addElement('advcheckbox', 'notificationid_'.$notification->id, $classname::get_name(), null,
                 ['group' => 1]);
         }
         $this->add_checkbox_controller(1);
 
-        $mform->addElement('html', get_string('notification_import_warning', 'local_openlms'));
-        $this->add_action_buttons(true, get_string('notification_import_confirmation', 'local_openlms'));
+        $this->add_action_buttons(true, get_string('notification_import', 'local_openlms'));
     }
 
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
-        $manager = $this->_customdata['manager'];
-        if (!$manager::validate_frominstance($data['frominstance'])) {
-            $errors['frominstance'] = get_string('error');
-        }
+
         return $errors;
     }
-
-
 }

@@ -27,7 +27,6 @@
 /** @var moodle_page $PAGE */
 /** @var core_renderer $OUTPUT */
 /** @var stdClass $CFG */
-/** @var stdClass $COURSE */
 
 use local_openlms\notification\util;
 
@@ -50,21 +49,24 @@ if (!$manager) {
 }
 
 $returnurl = $manager::get_instance_management_url($instanceid);
-if (!$manager::can_manage($instanceid)) {
+if (!$manager::can_manage($instanceid) || !$manager::is_import_supported()) {
     redirect($returnurl);
 }
 $context = $manager::get_instance_context($instanceid);
 
 $PAGE->set_context($context);
-$PAGE->set_url('/local/openlms/notification/add.php', ['component' => 'component', 'instanceid' => $instanceid]);
+$PAGE->set_url('/local/openlms/notification/import.php', ['component' => 'component', 'instanceid' => $instanceid]);
 $PAGE->set_pagelayout('admin');
-$PAGE->set_heading(get_string('notification_create', 'local_openlms'));
-$PAGE->set_title(get_string('notification_create', 'local_openlms'));
+$PAGE->set_heading(get_string('notification_import', 'local_openlms'));
+$PAGE->set_title(get_string('notification_import', 'local_openlms'));
 
 $form = null;
-if (!$frominstance) {
-    $form = new \local_openlms\form\notification_import(null,
-            ['instanceid' => $instanceid, 'component' => $component, 'manager' => $manager]);
+if (!$manager::validate_import_frominstance($instanceid, $frominstance)) {
+    $form = new \local_openlms\form\notification_import(null, [
+        'instanceid' => $instanceid,
+        'component' => $component,
+        'manager' => $manager,
+    ]);
     if ($form->is_cancelled()) {
         redirect($returnurl);
     } else if ($data = $form->get_data()) {
@@ -75,9 +77,12 @@ if (!$frominstance) {
 }
 
 if (!$form) {
-    $form = new \local_openlms\form\notification_import_confirmation(null,
-        ['instanceid' => $instanceid, 'component' => $component, 'manager' => $manager,
-            'frominstance' => $frominstance]);
+    $form = new \local_openlms\form\notification_import_confirmation(null, [
+        'instanceid' => $instanceid,
+        'component' => $component,
+        'manager' => $manager,
+        'frominstance' => $frominstance,
+    ]);
 
     if ($form->is_cancelled()) {
         redirect($returnurl);
@@ -86,19 +91,17 @@ if (!$form) {
     if ($data = $form->get_data()) {
         $notificationids = [];
         foreach ($data as $key => $value) {
-            if (str_contains($key, 'importnotification') && $value == 1) {
-                $notificationids[] = explode('_', $key)[1];
+            if (str_starts_with($key, 'notificationid_') && $value == 1) {
+                $notificationids[] = explode('_', $key, 2)[1];
             }
         }
-
-        util::import_notifications($data, $notificationids);
+        util::notification_import($data, $notificationids);
 
         $form->redirect_submitted($returnurl);
-
     }
 }
 
 echo $OUTPUT->header();
-echo $OUTPUT->heading(get_string('notification_create', 'local_openlms'));
+echo $OUTPUT->heading(get_string('notification_import', 'local_openlms'));
 echo $form->render();
 echo $OUTPUT->footer();

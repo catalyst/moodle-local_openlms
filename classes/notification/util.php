@@ -43,39 +43,6 @@ final class util {
     }
 
     /**
-     * Imports notifications- all existing notifications are deleted before importing.
-     *
-     * @param array $data
-     * @param array $notificationids that need to be imported.
-     * @return bool
-     */
-    public static function import_notifications(\stdClass $data, array $notificationids): bool {
-        global $DB;
-        $notifications = $DB->get_records('local_openlms_notifications',
-            ['instanceid' => $data->instanceid, 'component' => $data->component]);
-
-        foreach ($notificationids as $notificationid) {
-            $notification = $DB->get_record('local_openlms_notifications', ['id' => $notificationid]);
-            if ($notification->customjson) {
-                $notification->custom = 1;
-                list($notification->subject, $notification->body) = array_values((array) json_decode($notification->customjson));
-            }
-            $notification->instanceid = $data->instanceid;
-            // Check if there already is a notification for this type and instanceid.
-            $existingnotificationid = $DB->get_field('local_openlms_notifications', 'id',
-                ['instanceid' => $notification->instanceid = $data->instanceid, 'notificationtype' => $notification->notificationtype]);
-            if (!$existingnotificationid) {
-                self::notification_create((array)$notification);
-            } else {
-                $notification->id = $existingnotificationid;
-                self::notification_update((array)$notification);
-            }
-        }
-
-        return true;
-    }
-
-    /**
      * Create a new instance notification.
      *
      * @param array $data
@@ -196,6 +163,68 @@ final class util {
         $DB->delete_records('local_openlms_notifications', ['id' => $notificationid]);
 
         $trans->allow_commit();
+    }
+
+    /**
+     * Imports notifications from one instance into another.
+     *
+     * @param \stdClass $data object with component, instanceid and instancefrom are required
+     * @param array $notificationids that need to be imported
+     * @return void
+     */
+    public static function notification_import(\stdClass $data, array $notificationids): void {
+        global $DB;
+
+        if (empty($data->component)) {
+            throw new \invalid_parameter_exception('Notification component is required');
+        }
+        /** @var class-string<manager> $manager */
+        $manager = self::get_manager_classname($data->component);
+        if (!$manager || !$manager::is_import_supported()) {
+            throw new \invalid_parameter_exception('Invalid notification component');
+        }
+
+        // Validate the instanceid at least a bit.
+        if (empty($data->instanceid) || $manager::get_instance_name($data->instanceid) === null) {
+            throw new \invalid_parameter_exception('Invalid notification instanceid');
+        }
+
+        if (empty($data->frominstance) || $data->frominstance == $data->instanceid) {
+            throw new \invalid_parameter_exception('Invalid notification frominstance');
+        }
+
+        foreach ($notificationids as $notificationid) {
+            $fromnotification = $DB->get_record('local_openlms_notifications', [
+                'id' => $notificationid,
+                'component' => $data->component,
+                'instanceid' => $data->frominstance,
+            ]);
+            if (!$fromnotification) {
+                debugging('Invalid notificationid', DEBUG_DEVELOPER);
+                continue;
+            }
+
+            $current = $DB->get_record('local_openlms_notifications', [
+                'notificationtype' => $fromnotification->notificationtype,
+                'component' => $data->component,
+                'instanceid' => $data->instanceid,
+            ]);
+
+            if ($current) {
+                $current->enabled = $fromnotification->enabled;
+                $current->custom = $fromnotification->custom;
+                $current->customjson = $fromnotification->customjson;
+                $current->auxjson = $fromnotification->auxjson;
+                $current->auxint1 = $fromnotification->auxint1;
+                $current->auxint2 = $fromnotification->auxint2;
+                $DB->update_record('local_openlms_notifications', $current);
+            } else {
+                $newnotification = clone($fromnotification);
+                unset($newnotification->id);
+                $newnotification->instanceid = $data->instanceid;
+                $newnotification->id = $DB->insert_record('local_openlms_notifications', $newnotification);
+            }
+        }
     }
 
     /**

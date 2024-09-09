@@ -43,23 +43,20 @@ final class notification_import extends \local_openlms\dialog_form {
         $instance = $manager::get_instance_name($instanceid);
         $mform->addElement('static', 'staticinstance', get_string('notification_instance', 'local_openlms'), $instance);
 
-        $isimportsupported = $manager::is_instance_notification_import_supported();
+        $manager::add_import_frominstance_element($instanceid, $mform);
 
-        if ($isimportsupported) {
-            $manager::add_frominstance_element($instanceid, $mform);
-        }
-
-        $this->add_action_buttons(true, get_string('notification_import', 'local_openlms'));
+        $this->add_action_buttons(true, get_string('continue'));
     }
 
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
+
+        $instanceid = $this->_customdata['instanceid'];
         $manager = $this->_customdata['manager'];
-        if (!$manager::validate_frominstance($data['frominstance'])) {
+
+        if (!$manager::validate_import_frominstance($instanceid, $data['frominstance'])) {
             $errors['frominstance'] = get_string('error');
         }
         return $errors;
     }
-
-
 }

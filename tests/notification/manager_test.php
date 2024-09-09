@@ -36,4 +36,8 @@ class manager_test extends \advanced_testcase {
     public function test_get_component() {
         $this->assertSame('local_openlms', manager::get_component());
     }
+
+    public function test_is_import_supported() {
+        $this->assertFalse(manager::is_import_supported());
+    }
 }

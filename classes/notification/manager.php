@@ -16,6 +16,8 @@
 
 namespace local_openlms\notification;
 
+use \local_openlms\output\extra_menu\dropdown;
+
 /**
  * Base for classes that describe notifications in a plugin.
  *
@@ -118,30 +120,37 @@ abstract class manager {
      *
      * @return bool
      */
-    public static function is_instance_notification_import_supported(): bool {
+    public static function is_import_supported(): bool {
         return false;
     }
 
     /**
-     * Adds the from instance element dropdown
+     * Adds the frominstance autocomplete element to oimport form.
      *
      * @param int $instanceid
      * @param \MoodleQuickForm $mform
      * @return void
      */
-     public static function add_frominstance_element(int $instanceid, \MoodleQuickForm $mform): void {
-         return;
+     public static function add_import_frominstance_element(int $instanceid, \MoodleQuickForm $mform): void {
+         $arguments = ['id' => $instanceid];
+         \enrol_programs\external\form_notification_import_frominstance::add_form_element(
+             $mform, $arguments, 'frominstance', get_string('notification_import_from', 'local_openlms'));
+         $mform->addRule('frominstance', null, 'required', null, 'client');
      }
 
     /**
      * Validates if the user can import from the specified instanceid.
      *
+     * @param int $instanceid
      * @param int $frominstanceid
-     * @return void
+     * @return bool true means value ok
      */
-     public static function validate_frominstance(int $frominstanceid): bool {
-         return false;
-     }
+    public static function validate_import_frominstance(int $instanceid, int $frominstanceid): bool {
+        if (static::is_import_supported()) {
+            debugging('\local_openlms\notification\manager::validate_import_frominstance must be overridden if import supported', DEBUG_DEVELOPER);
+        }
+        return false;
+    }
 
     /**
      * Render list of all instance notifications and management UI.
@@ -219,16 +228,8 @@ abstract class manager {
         if (static::get_candidate_types($instanceid)) {
             $url = new \moodle_url('/local/openlms/notification/create.php', ['instanceid' => $instanceid, 'component' => $component]);
             $icon = new \local_openlms\output\dialog_form\icon($url, 'e/insert', get_string('notification_create', 'local_openlms'));
-            $icons = $dialogformoutput->render($icon);
-
-            if (static::is_instance_notification_import_supported()) {
-                $url = new \moodle_url('/local/openlms/notification/import.php', ['instanceid' => $instanceid, 'component' => $component]);
-                $icon = new \local_openlms\output\dialog_form\icon($url, 'import', get_string('notification_import', 'local_openlms'), 'local_openlms');
-                $importicon = $dialogformoutput->render($icon);
-                $icons .= ' '.$importicon;
-            }
-
-            $cell = new \html_table_cell($icons);
+            $icon = $dialogformoutput->render($icon);
+            $cell = new \html_table_cell($icon);
             if ($canmanage) {
                 $cell->colspan = 4;
             } else {
@@ -252,5 +253,28 @@ abstract class manager {
         $result = \html_writer::table($table);
 
         return $result;
+    }
+
+    /**
+     * Render list of all instance notifications and management UI.
+     *
+     * @param int $instanceid
+     * @return dropdown|null
+     */
+    public static function get_extra_actions(int $instanceid): ?dropdown {
+        if (!static::can_manage($instanceid)) {
+            return null;
+        }
+        if (!static::is_import_supported()) {
+            return null;
+        }
+
+        $dropdown = new dropdown(get_string('notification_extramenu', 'local_openlms'));
+        $component = static::get_component();
+        $url = new \moodle_url('/local/openlms/notification/import.php', ['instanceid' => $instanceid, 'component' => $component]);
+        $link = new \local_openlms\output\dialog_form\link($url, get_string('notification_import', 'local_openlms'));
+        $dropdown->add_dialog_form($link);
+
+        return $dropdown;
     }
 }
