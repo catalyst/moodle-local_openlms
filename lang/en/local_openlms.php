@@ -25,17 +25,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$string['cachedef_hookcallbacks'] = 'Hook callbacks';
 $string['extramenu'] = 'Extra actions';
-$string['hookcallback'] = 'Callback';
-$string['hookcallbacks'] = 'Callbacks';
-$string['hookdeprecates'] = 'Deprecated lib.php callbacks';
-$string['hookdescription'] = 'Description';
-$string['hookname'] = 'Hook';
-$string['hookoverride'] = 'Override hook';
-$string['hookpriority'] = 'Priority';
-$string['hookreset'] = 'Reset hook';
-$string['hooksoverview'] = 'Hooks overview';
 $string['notification'] = 'Notification';
 $string['notification_body'] = 'Message';
 $string['notification_create'] = 'Add notification';
