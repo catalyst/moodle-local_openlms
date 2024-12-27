@@ -267,8 +267,6 @@ final class util {
      * @return string
      */
     public static function filter_multilang(string $text, bool $cachefilters = true): string {
-        global $CFG;
-
         // This is a very nasty hack, but unfortunately there is no way to tell filter manager
         // to use only a subset of filters that are compatible with external messaging.
 
@@ -280,12 +278,7 @@ final class util {
                 if ($filtername !== 'multilang' && $filtername !== 'multilang2') {
                     continue;
                 }
-                $path = $CFG->dirroot .'/filter/'. $filtername .'/filter.php';
-                if (!is_readable($path)) {
-                    continue;
-                }
-                include_once($path);
-                $filterclassname = 'filter_' . $filtername;
+                $filterclassname = 'filter_' . $filtername . '\text_filter';
                 if (!class_exists($filterclassname)) {
                     continue;
                 }
